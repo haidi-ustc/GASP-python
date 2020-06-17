@@ -41,6 +41,9 @@ def make_objects(parameters):
     objects_dict = {}
 
     # make the composition space object
+
+    objects_dict['Elements']=parameters['Elements']
+
     if 'CompositionSpace' in parameters:
         composition_space = general.CompositionSpace(
             parameters['CompositionSpace'])

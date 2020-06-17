@@ -17,6 +17,7 @@ from gasp import general
 from gasp import population
 from gasp import objects_maker
 from gasp import parameters_printer
+from monty.serialization import loadfn 
 
 import copy
 import threading
@@ -37,8 +38,9 @@ def main():
         input_file = os.path.abspath(sys.argv[1])
 
     try:
-        with open(input_file, 'r') as f:
-            parameters = yaml.load(f)
+       # with open(input_file, 'r') as f:
+       #     parameters = yaml.load(f)
+       parameters = loadfn(input_file)
     except:
         print('Error reading input file.')
         print('Quitting...')
@@ -46,8 +48,10 @@ def main():
 
     # make the objects needed by the algorithm
     objects_dict = objects_maker.make_objects(parameters)
+ 
 
     # get the objects from the dictionary for convenience
+    elements_order=objects_dict['Elements']
     run_dir_name = objects_dict['run_dir_name']
     organism_creators = objects_dict['organism_creators']
     num_calcs_at_once = objects_dict['num_calcs_at_once']
@@ -130,7 +134,7 @@ def main():
                             thread = threading.Thread(
                                 target=energy_calculator.do_energy_calculation,
                                 args=[new_organism, relaxed_organisms,
-                                      index, composition_space])
+                                      index, composition_space, elements_order])
                             thread.start()
                             threads.append(thread)
 
@@ -218,7 +222,7 @@ def main():
                                             target=energy_calculator.do_energy_calculation,
                                             args=[new_organism,
                                                   relaxed_organisms, index,
-                                                  composition_space])
+                                                  composition_space, elements_order])
                                         new_thread.start()
                                         threads[index] = new_thread
                                         started_new_calc = True
@@ -304,7 +308,7 @@ def main():
         new_thread = threading.Thread(
             target=energy_calculator.do_energy_calculation,
             args=[unrelaxed_offspring, relaxed_organisms, index,
-                  composition_space])
+                  composition_space, elements_order])
         new_thread.start()
         threads.append(new_thread)
 
@@ -397,7 +401,7 @@ def main():
                     new_thread = threading.Thread(
                         target=energy_calculator.do_energy_calculation,
                         args=[unrelaxed_offspring, relaxed_organisms,
-                              index, composition_space])
+                              index, composition_space, elements_order])
                     new_thread.start()
                     threads[index] = new_thread
 

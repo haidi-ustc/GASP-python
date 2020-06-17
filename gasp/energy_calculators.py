@@ -27,6 +27,8 @@ from pymatgen.core.periodic_table import Element
 from pymatgen.io.lammps.data import LammpsData, LammpsBox, ForceField, Topology
 import pymatgen.command_line.gulp_caller as gulp_caller
 
+from dpdata import System 
+
 import shutil
 import subprocess
 import os
@@ -184,7 +186,7 @@ class LammpsEnergyCalculator(object):
         self.input_script = input_script
 
     def do_energy_calculation(self, organism, dictionary, key,
-                              composition_space):
+                              composition_space, element_order=None):
         """
         Calculates the energy of an organism using LAMMPS, and stores the
         relaxed organism in the provided dictionary at the provided key. If the
@@ -215,11 +217,22 @@ class LammpsEnergyCalculator(object):
 
         # write the in.data file
         self.conform_to_lammps(organism.cell)
-        self.write_data_file(organism, job_dir_path, composition_space)
+       # print(organism.cell)
+       # print(job_dir_path)
+       # print(composition_space)
+       # print(composition_space.get_all_elements())
+        #em_list=['Mg',"Al","Cu"]
+        #em_list=["Li"]
+        #self.write_data_file(organism, job_dir_path, composition_space)
 
         # write out the unrelaxed structure to a poscar file
+        organism.cell.sort()
         organism.cell.to(fmt='poscar', filename=job_dir_path + '/POSCAR.' +
                          str(organism.id) + '_unrelaxed')
+        ls=System(job_dir_path + '/POSCAR.' +
+                         str(organism.id) + '_unrelaxed',fmt='poscar',
+                         type_map=element_order)
+        ls.to_lammps_lmp(job_dir_path + '/in.data')
 
         # run 'calllammps' script as a subprocess to run LAMMPS
         print('Starting LAMMPS calculation on organism {} '.format(
@@ -246,10 +259,12 @@ class LammpsEnergyCalculator(object):
         all_elements = composition_space.get_all_elements()
         for element in all_elements:
             symbols.append(element.symbol)
+        #relaxed_cell = self.get_relaxed_cell(
+        #       job_dir_path + '/dump.atom', job_dir_path + '/in.data',
+        #        symbols)
         try:
-            relaxed_cell = self.get_relaxed_cell(
-                job_dir_path + '/dump.atom', job_dir_path + '/in.data',
-                symbols)
+            relaxed_cell = self.get_relaxed_cell_via_dpdata(
+                   job_dir_path + '/dump.atom',symbols)
         except:
             print('Error reading structure of organism {} from LAMMPS '
                   'output '.format(organism.id))
@@ -377,6 +392,13 @@ class LammpsEnergyCalculator(object):
             lammps_box, force_field, [topology],
             atom_style=atom_style_in_script)
         lammps_data.write_file(job_dir_path + '/in.data')
+
+    def get_relaxed_cell_via_dpdata(self, atom_dump_path, element_symbols):
+        s=System(atom_dump_path,fmt='lammps/dump',type_map=element_symbols)
+        st=s.to_pymatgen_structure()[0]
+        return Cell(st.lattice, st.species, st.cart_coords,
+                    coords_are_cartesian=True)
+
 
     def get_relaxed_cell(self, atom_dump_path, data_in_path, element_symbols):
         """
@@ -843,3 +865,25 @@ class GulpEnergyCalculator(object):
         latt = Lattice.from_parameters(a, b, c, alpha, beta, gamma)
 
         return Cell(latt, sp, coords)
+
+def structure2system(structure):
+    atom_numbs=[]
+    atom_names=[]
+    comp=structure.composition
+    symbol=sorted(structure.symbol_set)
+    el_map=dict(zip(symbol,range(len(symbol)))) 
+    atom_types=[el_map[ii.symbol] for ii in structure.species]
+    cell=structure.lattice.matrix
+    coords=structure.cart_coords
+    for el in structure.symbol_set:
+        atom_numbs.append(int(comp[el]))
+        atom_names.append(el)
+    data={
+        "atom_numbs":atom_numbs,
+        "atom_names":atom_names,
+        "atom_types":atom_types,
+        "cells":cell.reshape(1,3,3),
+        "coords":coords.reshape(1,sum(atom_numbs),3),
+        "orig":np.array([0,0,0])
+            }
+    return System(data=data)

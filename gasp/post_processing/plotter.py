@@ -13,9 +13,7 @@ from the genetic algorithm structure search.
 """
 
 from pymatgen.core.composition import Composition
-from pymatgen.phasediagram.entries import PDEntry
-from pymatgen.phasediagram.maker import CompoundPhaseDiagram
-from pymatgen.phasediagram.plotter import PDPlotter
+from pymatgen.analysis.phase_diagram import PDEntry,CompoundPhaseDiagram,PDPlotter
 
 import matplotlib.pyplot as plt
 import os

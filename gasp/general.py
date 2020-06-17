@@ -227,7 +227,8 @@ class Cell(Structure):
                     self.lattice.matrix[0][1],
                     self.lattice.matrix[0][0]))
         new_structure = rotation.apply_transformation(self)
-        self.modify_lattice(new_structure.lattice)
+        self.lattice=new_structure.lattice
+        #self.modify_lattice(new_structure.lattice)
 
         # rotate about the y-axis to make a parallel to the x-axis
         rotation = RotationTransformation(
@@ -235,7 +236,8 @@ class Cell(Structure):
                     self.lattice.matrix[0][2],
                     self.lattice.matrix[0][0]))
         new_structure = rotation.apply_transformation(self)
-        self.modify_lattice(new_structure.lattice)
+        self.lattice=new_structure.lattice
+        #self.modify_lattice(new_structure.lattice)
 
         # rotate about the x-axis to make b lie in the x-y plane
         rotation = RotationTransformation(
@@ -243,19 +245,23 @@ class Cell(Structure):
                     self.lattice.matrix[1][2],
                     self.lattice.matrix[1][1]))
         new_structure = rotation.apply_transformation(self)
-        self.modify_lattice(new_structure.lattice)
+        self.lattice=new_structure.lattice
+        #self.modify_lattice(new_structure.lattice)
 
         # make sure they are all pointing in positive directions
         if self.lattice.matrix[0][0] < 0:
             # rotate about y-axis to make a positive
             rotation = RotationTransformation([0, 1, 0], 180)
             new_structure = rotation.apply_transformation(self)
-            self.modify_lattice(new_structure.lattice)
+            self.lattice=new_structure.lattice
+            #self.modify_lattice(new_structure.lattice)
         if self.lattice.matrix[1][1] < 0:
             # rotate about x-axis to make b positive
             rotation = RotationTransformation([1, 0, 0], 180)
             new_structure = rotation.apply_transformation(self)
-            self.modify_lattice(new_structure.lattice)
+            self.lattice=new_structure.lattice
+            #by haidi
+            #self.modify_lattice(new_structure.lattice)
         if self.lattice.matrix[2][2] < 0:
             # mirror c across the x-y plane to make it positive
             # a and b
@@ -265,7 +271,8 @@ class Cell(Structure):
             cx = self.lattice.matrix[2][0]
             cy = self.lattice.matrix[2][1]
             cz = -1*self.lattice.matrix[2][2]
-            self.modify_lattice(Lattice([a, b, [cx, cy, cz]]))
+            self.lattice=Lattice([a, b, [cx, cy, cz]])
+            #self.modify_lattice(Lattice([a, b, [cx, cy, cz]]))
 
     def rotate_c_parallel_to_z(self):
         """
@@ -346,7 +353,8 @@ class Cell(Structure):
         # modify the cell to correspond to the reduced structure
         rcartesian_coords = reduced_structure.cart_coords
         rspecies = reduced_structure.species
-        self.modify_lattice(reduced_structure.lattice)
+        self.lattice=reduced_structure.lattice
+        #self.modify_lattice(reduced_structure.lattice)
         site_indices = []
         for i in range(len(self.sites)):
             site_indices.append(i)
