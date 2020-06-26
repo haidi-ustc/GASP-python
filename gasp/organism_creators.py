@@ -27,6 +27,9 @@ import warnings
 import os
 import math
 import numpy as np
+from pyxtal.crystal import random_crystal
+import time
+import random
 
 
 class RandomOrganismCreator(object):
@@ -187,7 +190,7 @@ class RandomOrganismCreator(object):
         return default_vpas
 
     def create_organism(self, id_generator, composition_space, constraints,
-                        random):
+                        random,dimension=3):
         """
         Creates a random organism for the initial population.
 
@@ -211,21 +214,47 @@ class RandomOrganismCreator(object):
         """
 
         # make a random lattice
-        random_lattice = self.make_random_lattice(constraints, random)
+        #random_lattice = self.make_random_lattice(constraints, random)
 
         # get a list of species for the random organism
+        random.seed(int(time.time()*1e5))
         species = self.get_species_list(composition_space, constraints, random)
         if species is None:  # could happen for pd searches...
             return None
 
         # for each specie, generate a set of random fractional coordinates
-        random_coordinates = []
-        for _ in range(len(species)):
-            random_coordinates.append([random.random(), random.random(),
-                                       random.random()])
+        species_symbol=[ii.symbol for ii in species]
+        symbol_set=list(set(species_symbol))
+        species_count=[species_symbol.count(el) for el in symbol_set]
+        #species_dict={el:species_symbol.count(el) for el in symbol_set}
+        #comp=Composition(species_dict)
+        while True:
+            if dimension==0:
+               sg=random.choice(range(1,57))
+            elif dimension==1:
+               pass
+            elif dimension==2:
+               pass
+            else:
+               sg=random.choice(range(1,231))
+               #symbol, sg = get_symbol_and_number(sg, dimension)
+
+            try:
+                ret=random_crystal(sg, symbol_set, species_count, factor=1.0)
+            except:
+                pass
+            if ret.valid:
+               break
+
+        random_cell = Cell(ret.struct.lattice, ret.struct.species, ret.struct.frac_coords)
+
+        #random_coordinates = []
+        #for _ in range(len(species)):
+        #    random_coordinates.append([random.random(), random.random(),
+        #                               random.random()])
 
         # make a random cell
-        random_cell = Cell(random_lattice, species, random_coordinates)
+        #random_cell = Cell(random_lattice, species, random_coordinates)
 
         # optionally scale the volume of the random structure
         if not self.scale_volume(random_cell):

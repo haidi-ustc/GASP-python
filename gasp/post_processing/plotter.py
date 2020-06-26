@@ -15,6 +15,8 @@ from the genetic algorithm structure search.
 from pymatgen.core.composition import Composition
 from pymatgen.analysis.phase_diagram import PDEntry,CompoundPhaseDiagram,PDPlotter
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import os
 
@@ -190,7 +192,7 @@ class Plotter(object):
         compound_pd = CompoundPhaseDiagram(pdentries, endpoints)
 
         # make a PhaseDiagramPlotter
-        pd_plotter = PDPlotter(compound_pd, show_unstable=100)
+        pd_plotter = PDPlotter(compound_pd, show_unstable=50)
         return pd_plotter.get_plot(label_unstable=False)
 
     def plot_phase_diagram(self):
@@ -198,4 +200,5 @@ class Plotter(object):
         Plots the phase diagram.
         """
 
-        self.get_phase_diagram_plot().show()
+        #self.get_phase_diagram_plot().show()
+        self.get_phase_diagram_plot().savefig('result.png')
